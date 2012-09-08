@@ -54,12 +54,12 @@
 #define USB_PKTST_EPN           (1 << 4)
 
 /* From USB2.0 chapter 9.1 (these are the important states) */
-enum { USB_STATE_DEFAULT, USB_STATE_ADDRESS, USB_STATE_CONFIGURED }     g_device_state;
-const struct usb_configuration_s                                       *g_config_descriptor;
+static enum { USB_STATE_DEFAULT, USB_STATE_ADDRESS, USB_STATE_CONFIGURED }     g_device_state;
+static const struct usb_configuration_s                                       *g_config_descriptor;
 
 /* Information about the endpoints. This is populated automatically from the
  * g_config_descriptor data structure on load. */
-struct endpoint_descriptor_s
+static struct endpoint_descriptor_s
 {
     int             enabled;
     unsigned        max_buffer_size;
@@ -113,7 +113,8 @@ usb_write
     return to_write;
 }
 
-int
+int /* Returns negative on error, otherwise returns the number of characters
+     * supplied by the endpoint. */
 usb_read
     (unsigned       physical_endpoint
     ,unsigned char *buffer

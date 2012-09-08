@@ -223,10 +223,10 @@ const unsigned char midi_prod_str[] =
 
 static
 const unsigned char* midi_strings[] =
-{   0 /* should return string table 9.6.7 */
-,   midi_mfg_str
-,   midi_prod_str
-};
+    {   0 /* should return string table 9.6.7 */
+    ,   midi_mfg_str
+    ,   midi_prod_str
+    };
 
 #define NB_STRINGS (sizeof(midi_strings) / sizeof(unsigned char*))
 
@@ -309,19 +309,50 @@ const struct usb_configuration_s midi_config =
 ,   midi_endpoint_event
 };
 
+#include <LPC17xx.h>
+
 void
 usb_midi_setup
     (unsigned long fosc
     )
 {
     usb_setup(fosc, &midi_config);
-
+#if 0
     {
         /* for testing. a slow loop which will trigger note on/off messages
          * that never ends. */
         unsigned i = 0;
         while (1)
         {
+            static unsigned char x = 0;
+            static unsigned char xmask = 0xff;
+            static unsigned long z = 0;
+            if (LPC_SSP1->SR & 0x2)
+            {
+                z++;
+                if (z == 100000)
+                {
+                    LPC_GPIO2->FIOSET = 1 << 13;
+                    LPC_SSP1->DR = x & xmask;
+                    if (LPC_SSP1->SR & 0x4)
+                    {
+                        while (LPC_SSP1->SR & 0x4)
+                        {
+                            xmask = (~LPC_SSP1->DR) & 0xff;
+                        }
+                    }
+                    else
+                    {
+                        xmask = 0xff;
+                    }
+                    x++;
+                    z = 0;
+                }
+                else if (z == 50000)
+                {
+                    LPC_GPIO2->FIOCLR = 1 << 13;
+                }
+            }
             if (usb_is_configured())
             {
                 i++;
@@ -337,7 +368,7 @@ usb_midi_setup
             }
         }
     }
-
+#endif
 }
 
 

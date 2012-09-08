@@ -15,29 +15,17 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>
  */
 
-#ifdef __USE_CMSIS
-#include "LPC17xx.h"
-#endif
+#ifndef CONBUS_H_
+#define CONBUS_H_
 
-#include "usb_midi.h"
-#include <cr_section_macros.h>
-#include <NXP/crp.h>
-#include "conbus.h"
-
-__CRP const unsigned int CRP_WORD = CRP_NO_CRP ;
-
-static unsigned char conbus_data[1024];
-
-
-int main(void)
+struct conbus_config_s
 {
-    struct conbus_config_s cfg;
-    cfg.nb_inputs_div_8 = 1;
-    cfg.nb_outputs_div_8 = 1;
-    conbus_init(&cfg, conbus_data);
-    usb_midi_setup(12000000UL);
-    for (;;)
-    {
-    }
-	return 0;
-}
+    unsigned    nb_inputs_div_8;  /* Every input requires 1 byte */
+    unsigned    nb_outputs_div_8; /* Every output requires 1 bit */
+};
+
+void conbus_init(const struct conbus_config_s *config, unsigned char *memory);
+
+
+
+#endif /* CONBUS_H_ */
