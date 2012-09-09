@@ -53,6 +53,9 @@
 #define USB_PKTST_PO            (1 << 3)
 #define USB_PKTST_EPN           (1 << 4)
 
+#define USB_DEV_DESC_NB_CFG(desc)   (desc[17])
+#define USB_CFG_DESC_ID(desc)       (desc[5])
+
 /* From USB2.0 chapter 9.1 (these are the important states) */
 static enum { USB_STATE_DEFAULT, USB_STATE_ADDRESS, USB_STATE_CONFIGURED }     g_device_state;
 static const struct usb_configuration_s                                       *g_config_descriptor;
@@ -323,15 +326,14 @@ usb_control_set_configuration
         }
         else
         {
-            unsigned idx = 0;
-            const unsigned char* cfg = g_config_descriptor->get_cfg_desc(idx);
-            while (cfg)
+            unsigned idx = USB_DEV_DESC_NB_CFG(g_config_descriptor->dev_desc);
+            while (idx)
             {
-                if (cfg[5] == wvalue)
+                const unsigned char* cfg = g_config_descriptor->get_cfg_desc(--idx);
+                if (USB_CFG_DESC_ID(cfg) == wvalue)
                 {
                     return usb_control_set_config_helper(cfg);
                 }
-                idx++;
             }
         }
     }

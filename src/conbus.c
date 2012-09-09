@@ -96,39 +96,37 @@ void SSP1_IRQHandler(void)
             unsigned new_ip_state = LPC_SSP1->DR;
             unsigned old_ip_state = input_memory[read_pos - start_reading_input];
             unsigned i;
-            for (i = 0; i < 8; i++)
+            unsigned mask = 1;
+            for (i = 0; i < 8; i++, mask <<= 1)
             {
-                unsigned debouncer = debounce_mempos[i];
-                if (debouncer & 0x7f) debouncer--;
-                if ((new_ip_state >> i) & 1)
+                unsigned debouncer = *debounce_mempos;
+                if (debouncer & 0x7f)
                 {
-                    /* Key is down */
+                    debouncer--;
+                }
+                if (new_ip_state & mask)
+                {
                     if (!(debouncer & 0x80))
                     {
-                        /* Debouncer is up... */
-                        debouncer = 0x80 | DEBOUNCE_TICKS;
-                        old_ip_state |= (1 << i);
+                        debouncer       = 0x80 | DEBOUNCE_TICKS;
+                        old_ip_state   |= mask;
                     }
                 }
                 else
                 {
-                    /* Key is up */
                     if (debouncer & 0x80)
                     {
-                        /* Debouncer is down */
-                        debouncer = DEBOUNCE_TICKS;
+                        debouncer       = DEBOUNCE_TICKS;
                     }
                     else if (debouncer == 0)
                     {
-                        /* Key has been up for debounce ticks - update state */
-                        old_ip_state &= ~(1 << i);
+                        old_ip_state   &= ~mask;
                     }
                 }
-                input_memory[read_pos - start_reading_input] = old_ip_state;
-                output_memory[0] = old_ip_state;
-                debounce_mempos[i] = debouncer;
+                *debounce_mempos++ = debouncer;
             }
-            debounce_mempos += 8;
+            output_memory[0]                                = old_ip_state;
+            input_memory[read_pos - start_reading_input]    = old_ip_state;
         }
         read_pos++;
     }
